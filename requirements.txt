@@ -1,0 +1,8 @@
+Flask~=3.1.0
+flask_restx~=1.3.0
+jsonschema
+marshmallow
+psutil
+python-dotenv
+python_box==7.2.0
+requests
