@@ -51,7 +51,7 @@ class ClassifyCuisine(Resource):
             return make_response((response.json(), response.status_code))
             
         except ValidationError as err:
-            return make_response(({"errors": err.messages}, 400))
+            raise ValidationError(err.messages)
 
 @cuisine_namespace.route("/<string:name>")
 class SearchForCuisine(Resource):
@@ -132,7 +132,10 @@ class CreateCuisine(Resource):
                             ]
                         },
                         "Type": {
-                            "select": data.type
+                            "select": {
+                                "name": data.type,
+                                "color": "default"
+                            }
                         }
                     },
                     "icon": {
@@ -146,4 +149,4 @@ class CreateCuisine(Resource):
 
             return make_response((response.json(), response.status_code))
         except ValidationError as err:
-            return make_response(({"errors": err.messages}, 400))
+            raise ValidationError(err.messages)
