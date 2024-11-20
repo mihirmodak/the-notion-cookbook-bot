@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Recipe...</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .loader-container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .loader-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .loader-message {
+            color: #4b5563;
+            margin-bottom: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            border: 4px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .status-list {
+            text-align: left;
+            max-width: 300px;
+            margin: 2rem auto 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .status-item.done {
+            color: #059669;
+        }
+
+        .status-item.active {
+            color: #3b82f6;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .check-icon {
+            color: #059669;
+        }
+
+        .loading-icon {
+            color: #3b82f6;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: .5;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader-container">
+        <div class="loader-title">Processing Recipe</div>
+        <div class="loader-message">Please wait while we process your recipe...</div>
+        <div class="spinner"></div>
+
+        <div class="status-list">
+            <div class="status-item" id="extract">
+                <svg class="status-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Extracting recipe data...
+            </div>
+            <div class="status-item" id="analyze">
+                <svg class="status-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Analyzing ingredients...
+            </div>
+            <div class="status-item" id="create">
+                <svg class="status-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Creating recipe page...
+            </div>
+            <div class="status-item" id="redirect">
+                <svg class="status-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Redirecting to Notion...
+        </div>
+    </div>
+
+    <script>
+        // Function to update status item state
+        function updateStatus(id, state) {
+            const item = document.getElementById(id);
+            if (!item) return;
+
+            // Remove existing classes
+            item.classList.remove('done', 'active');
+            
+            // Update icon based on state
+            const icon = item.querySelector('.status-icon');
+            if (state === 'done') {
+                item.classList.add('done');
+                icon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M5 13l4 4L19 7" />
+                `;
+            } else if (state === 'active') {
+                item.classList.add('active');
+                // Keep the loading spinner icon
+            }
+        }
+
+        // Get the current URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const url = urlParams.get('url');
+        const id = urlParams.get('id');
+
+        // Create EventSource with the parameters
+        const eventSource = new EventSource(`/recipe/create?url=${url}&id=${id}`);
+
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            switch (data.status) {
+                case 'extracting':
+                    updateStatus('extract', 'active');
+                    break;
+                case 'extracted':
+                    updateStatus('extract', 'done');
+                    break;
+                case 'analyzing':
+                    updateStatus('analyze', 'active');
+                    break;
+                case 'analyzed':
+                    updateStatus('analyze', 'done');
+                    break;
+                case 'creating':
+                    updateStatus('create', 'active');
+                    break;
+                case 'created':
+                    updateStatus('create', 'done');
+                    break;
+                case 'redirecting':
+                    updateStatus('redirect', 'active');
+                    eventSource.close();
+                    // Store the URL for redirection
+                    const notionUrl = data.url;
+                    // Show redirect message
+                    document.querySelector('.loader-message').textContent = data.message;
+                    // Wait 1.5 seconds before redirecting
+                    setTimeout(() => {
+                        updateStatus('redirect', 'done');
+                        // Add a tiny delay after showing the checkmark
+                        setTimeout(() => {
+                            window.location.href = notionUrl;
+                        }, 100);
+                    }, 1500);
+                    break;
+                case 'error':
+                    eventSource.close();
+                    // Show error message
+                    document.querySelector('.loader-message').textContent = data.message;
+                    document.querySelector('.loader-message').style.color = '#dc2626';
+                    document.querySelector('.spinner').style.display = 'none';
+                    break;
+            }
+        };
+
+        eventSource.onerror = function(error) {
+            console.error('EventSource failed:', error);
+            eventSource.close();
+            document.querySelector('.loader-message').textContent = 'An error occurred while processing the recipe.';
+            document.querySelector('.loader-message').style.color = '#dc2626';
+            document.querySelector('.spinner').style.display = 'none';
+        };
+    </script>
+
+</body>
+
+</html>

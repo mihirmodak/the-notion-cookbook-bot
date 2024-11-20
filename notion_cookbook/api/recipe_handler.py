@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, is_dataclass
 from typing import List, Optional, Dict, Any
-import urllib
+import requests
+from pprint import pformat
 
 from .helpers import clean_string
 from .ingredient import SearchForIngredient, CreateIngredient
@@ -367,9 +368,13 @@ class NotionRecipeHandler:
         cuisine = clean_string(cuisine)
 
         found_cuisine = SearchForCuisine().get(cuisine)
+        if "code" in found_cuisine.json:
+            raise requests.HTTPError(f"Error in searching for Cuisine:\n{found_cuisine.json["message"]}")
         cuisine_id = found_cuisine.json["id"]
         if not cuisine_id:
             created_cuisine = CreateCuisine().get({"name": cuisine, "type": "Cuisine"})
+            if "code" in created_cuisine.json:
+                raise requests.HTTPError(f"Error in creating the {cuisine} Cuisine:\n{created_cuisine.json["message"]}")
             cuisine_id = created_cuisine.json["id"]
 
         return cuisine_id
