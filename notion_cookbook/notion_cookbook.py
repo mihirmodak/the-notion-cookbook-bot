@@ -1,8 +1,10 @@
-import importlib.metadata
 import os
 import socket
 import traceback
-from flask import Flask, Blueprint, request, jsonify
+import secrets
+from datetime import datetime
+from pprint import pformat
+from flask import Flask, Blueprint, request, jsonify, render_template
 from flask_restx import Api
 from dotenv import load_dotenv
 load_dotenv()
@@ -15,6 +17,7 @@ from .api.cuisine import cuisine_namespace
 
 app = Flask("notion_cookbook")
 app.config['PROPAGATE_EXCEPTIONS'] = True # Enable detailed error messages
+app.config['SECRET_KEY'] = secrets.token_hex(16)
 
 @app.route("/")
 def main():
@@ -90,11 +93,32 @@ def health_check():
 
 @app.errorhandler(Exception)
 def handle_error(error):
-    return jsonify({
-        "message": str(error),
+    error_data = {
         "type": error.__class__.__name__,
-        "traceback": traceback.format_exception(error)
-    }), 500
+        "message": str(error),
+        "traceback": traceback.format_exception(error),
+        "timestamp": datetime.now().isoformat(),
+        "request_id": request.headers.get("X-Request-ID", "N/A"),
+        "endpoint": request.endpoint,
+        "method": request.method
+    }
+    return render_template("error.html", error=error_data), 500
+
+@app.route("/error")
+def handle_error():
+    args = request.args.to_dict()
+    assert "message" in args
+    error = args["message"]
+    error_data = {
+        "type": "Exception",
+        "message": str(error),
+        "traceback": None,
+        "timestamp": datetime.now().isoformat(),
+        "request_id": request.headers.get("X-Request-ID", "N/A"),
+        "endpoint": request.endpoint,
+        "method": request.method
+    }
+    return render_template("error.html", error=error_data), 500
 
 # ----- API -----
 api_blueprint = Blueprint("api", "The Cookbook Bot") # url_prefix="/api/v1"
