@@ -4,7 +4,7 @@ import traceback
 import secrets
 from datetime import datetime
 from pprint import pformat
-from flask import Flask, Blueprint, request, jsonify, render_template
+from flask import Flask, Blueprint, request, jsonify, render_template, redirect
 from flask_restx import Api
 from dotenv import load_dotenv
 load_dotenv()
@@ -21,14 +21,20 @@ app.config['SECRET_KEY'] = secrets.token_hex(16)
 
 @app.route("/")
 def main():
+
+    # Get the Accept header from the request
+    accept_header = request.headers.get('Accept', '')
+
+
+    # If the request accepts HTML (likely a browser)
+    if 'text/html' in accept_header:
+        return render_template("index.html")
+        return redirect("https://github.com/mihirmodak/the-notion-cookbook-bot")
+    
     # Enhanced response with debug information
     return jsonify({
         "status": "success",
-        "message": "The app is accessible",
-        "server_info": {
-            "hostname": socket.gethostname(),
-            "ip": socket.gethostbyname(socket.gethostname())
-        }
+        "message": "The Notion Cookbook Server is accessible"
     }), 200
 
 @app.route("/health")
