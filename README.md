@@ -151,4 +151,4 @@ Access the Swagger UI documentation at `/api/doc` when running the application l
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details
+This project is licensed under the GNU Affero General Public License - see the LICENSE file for details
