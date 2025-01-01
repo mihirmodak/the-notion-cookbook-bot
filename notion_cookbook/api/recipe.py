@@ -79,12 +79,11 @@ class AnalyzeRecipeURL(Resource):
         
         abort(response)
 
-    @simulate_internal_call
-    def get(self, params:dict):
+    def run(self, params: dict):
         schema = RecipeSchema()
 
         try:
-            data = Box(schema.load(request.args.to_dict()))
+            data = Box(schema.load(params))
 
             # Extract data about the recipe from the webpage
             recipe_data = self.extract_data(data.url)
@@ -97,9 +96,28 @@ class AnalyzeRecipeURL(Resource):
             
             return recipe_data, 200
         except ValidationError as err:
-            raise ValidationError(err.messages)
+            msg = f"Received data: {params}"
+            # raise ValidationError(err.messages)
+            raise ValidationError(msg)
         # except Exception as e:
         #     return {"error": str(e)}, 500
+
+    def get(self):
+        return self.run(request.args.to_dict())
+
+    def post(self):
+        data = request.get_json(force=True)
+
+        # Extract data about the recipe from the webpage
+        recipe_data = self.extract_data(data.url)
+
+        # Add only nutrition and taste data to the dict
+        # Do not use .update() since that could change the other values in the dict
+        analyzed_data = self.analyze_data(recipe_data)
+        recipe_data.nutrition = analyzed_data.nutrition
+        recipe_data.taste = analyzed_data.taste
+        
+        return recipe_data, 200
 
 
 # ----- CREATE RECIPE -----
@@ -110,10 +128,13 @@ class CreateRecipePage(Resource):
         if "text/html" in request.headers.get("Accept", ""):
             # Return the loading page template
             return make_response(render_template('loading.html'))
+
+        schema = RecipeSchema()
+        data = Box(schema.load(request.args.to_dict()))
         
         # Otherwise handle as SSE stream
         return Response(
-            self._process_recipe(),
+            self._process_recipe(data),
             mimetype='text/event-stream',
             headers={
                 'Cache-Control': 'no-cache',
@@ -121,28 +142,84 @@ class CreateRecipePage(Resource):
             }
         )
     
-    @stream_with_context
-    def _process_recipe(self):
-        schema = RecipeSchema()
+    def post(self) -> Response:
+        raw_data = Box(request.get_json(force=True))
+        data = Box({
+            "url": raw_data.data.properties.URL.url,
+            "id": raw_data.data.properties.ID.formula.string
+        })
 
+        # # Check if this is an HTML request or API request
+        # if "text/html" in request.headers.get("Accept", ""):
+        #     # Return the loading page template
+        #     return render_template('loading.html')
+
+        # Otherwise handle as SSE stream
+        return Response(
+            self._process_recipe(data),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+            }
+        )
+        
+    def update_page_title(self, message: str, id: str) -> Response:
+        headers = {
+            "accept": "application/json",
+            "Notion-Version": "2022-06-28",
+            "content-type": "application/json",
+            "Authorization": f"Bearer {os.getenv('NOTION_INTEGRATION_SECRET')}"
+        }
+
+        response = requests.patch(
+            url=f"https://api.notion.com/v1/pages/{id}",
+            headers=headers,
+            data=json.dumps({
+                "properties": {
+                    "Name": {
+                        "type": "title",
+                        "title": [
+                            {
+                                "type": "text",
+                                "text": {
+                                    "content": message
+                                }
+                            }
+                        ]
+                    },
+                }
+            })
+        )
+
+        return response
+
+    @stream_with_context
+    def _process_recipe(self, data):
         try:
-            data = Box(schema.load(request.args.to_dict()))
             
             # Step 1: Extract recipe data
             yield send_event({"status": "extracting", "message": "Extracting recipe data..."})
-            recipe_data, _ = AnalyzeRecipeURL().get(data.to_dict())
+            self.update_page_title("Extracting recipe data...", data.id)
+            recipe_data, _ = AnalyzeRecipeURL().run(data.to_dict())
+
             yield send_event({"status": "extracted", "message": "Recipe data extracted successfully"})
+            self.update_page_title("Recipe data extracted successfully", data.id)
             
             # Step 2: Process ingredients
             yield send_event({"status": "analyzing", "message": "Analyzing ingredients..."})
+            self.update_page_title("Analyzing ingredients...", data.id)
             ingredients = [
                 ingredient["nameClean"] if ingredient["nameClean"] else ingredient 
                 for ingredient in recipe_data["extendedIngredients"]
             ]
+
             yield send_event({"status": "analyzed", "message": "Ingredients analyzed successfully"})
+            self.update_page_title("Ingredients analyzed successfully", data.id)
 
             # Step 3: Create the recipe page
             yield send_event({"status": "creating", "message": "Creating recipe page..."})
+            self.update_page_title("Creating recipe page...", data.id)
             
             recipe_handler = NotionRecipeHandler(recipe_data)
             recipe_handler.page.parent["database_id"] = os.getenv("NOTION_RECIPE_DATABASE_ID")
@@ -202,3 +279,4 @@ class CreateRecipePage(Resource):
                 "status": "error",
                 "message": f"Error: {str(e)}"
             })
+            self.update_page_title(f"Error: {str(e)}", data.id)
