@@ -1,5 +1,276 @@
-<html>
-    <head>
-        <meta http-equiv="refresh" content="0; url=https://the-notion-cookbook-bot.com" />
-    </head>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- SEO Information -->
+    <title>The Notion Cookbook Bot</title>
+    <meta name="description" content="An automated service that creates a Notion page for any recipe based on the URL">
+
+    <!-- Settings for the whole document -->
+    <base target="_blank">
+
+    <!-- Prefetch AWS S3 Bucket DNS -->
+    <link rel="dns-prefetch" href="https://mihirmodak.s3.us-east-1.amazonaws.com/" />
+
+    <!-- Preload images and logos -->
+    <!-- Page Favicon -->
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/logo.png" as="image" type="image/png"/>
+
+    <!-- Footer Home Button -->
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/home-lightmode.svg" as="image" type="image/svg+xml"/>
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/home-darkmode.svg" as="image" type="image/svg+xml"/>
+
+    <!-- Footer GitHub Button -->
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/github-mark-lightmode.svg" as="image" type="image/svg+xml"/>
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/github-mark-darkmode.svg" as="image" type="image/svg+xml"/>
+
+    <!-- Footer Linkedin Button -->
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/linkedin-lightmode.svg" as="image" type="image/svg+xml"/>
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/linkedin-darkmode.svg" as="image" type="image/svg+xml"/>
+
+    <!-- Footer Resume Button -->
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/resume-lightmode.svg" as="image" type="image/svg+xml"/>
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/resume-darkmode.svg" as="image" type="image/svg+xml"/>
+
+    <!-- Footer Email Button -->
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/email-lightmode.svg" as="image" type="image/svg+xml"/>
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/email-darkmode.svg" as="image" type="image/svg+xml"/>
+    
+    <!-- Project GIF Files -->
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/NotionRecipeBot.gif" as="image" type="image/gif"/>
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/HodgkinHuxley.gif" as="image" type="image/gif"/>
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/HodgkinHuxley.gif" as="image" type="image/gif"/>
+    <link rel="preload" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/HodgkinHuxley.gif" as="image" type="image/gif"/>
+
+
+    <!-- Add Page Icons -->
+    <link rel="icon" type="image/x-icon" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/logo.png">
+    <link rel="apple-touch-icon" href="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/logo.png">
+
+    <!-- CSS -->
+    <link rel="preload" href="{{ url_for('static', filename='styles.css') }}" as="style">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preload" href="{{ url_for('static', filename='tags.css') }}" as="style">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tags.css') }}">
+    <link rel="preload" href="{{ url_for('static', filename='classes.css') }}" as="style">
+    <link rel="stylesheet" href="{{ url_for('static', filename='classes.css') }}">
+
+    <style data-href="https://fonts.googleapis.com/css2?family=Inter:wght@40;50;60;70;80;900&amp;display=swap">
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZs.woff) format('woff')
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fMZs.woff) format('woff')
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYMZs.woff) format('woff')
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYMZs.woff) format('woff')
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 800;
+            font-display: swap;
+            src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuDyYMZs.woff) format('woff')
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 900;
+            font-display: swap;
+            src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuBWYMZs.woff) format('woff')
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Page Title -->
+    <p class="title">The Notion Cookbook Bot: A Notion Integration for Recipe Management</p>
+
+    <!-- Author Info -->
+    <p class="metadata">Mihir Modak • November 23, 2024 • Python</p>
+
+    <!-- Cover Image -->
+    <div contenteditable="false" style="display:flex; justify-content: center;">
+        <img alt="" src="{{ url_for('static', filename='cover.gif') }}" decoding="async" loading="lazy">
+    </div>
+
+    <!-- High-Level Overview -->
+    <article id="overview">
+        <h2>Overview & Motivation</h2>
+        <p>
+            The Cookbook Bot is a Flask-based web application that helps manage recipes in Notion. Through its comprehensive API system, 
+            it analyzes recipes, manages ingredients, and handles cuisine classifications while seamlessly integrating with Notion's 
+            database structure. The project aims to automate and streamline the process of recipe collection and organization.
+        </p>
+    
+        <h2>Key Features</h2>
+        <ul>
+            <li><strong>Recipe Management:</strong> Analyze and create recipe pages in Notion with structured data organization</li>
+            <li><strong>Ingredient Database:</strong> Track and categorize ingredients with automatic classification</li>
+            <li><strong>Cuisine Classification:</strong> Automatically classify recipes based on ingredients and title</li>
+            <li><strong>Health Monitoring:</strong> Comprehensive system health checks for all integrated services</li>
+            <li><strong>API Documentation:</strong> Interactive API documentation with Swagger UI</li>
+        </ul>
+    
+        <h2>Technical Architecture</h2>
+        <p>The application follows a modular architecture with these key components:</p>
+        <pre><code>notion_cookbook/
+    ├── api/
+    │   ├── __init__.py
+    │   ├── recipe.py          # Recipe-related endpoints
+    │   ├── recipe_handler.py  # Notion recipe page handler
+    │   ├── ingredient.py      # Ingredient management
+    │   ├── cuisine.py         # Cuisine classification
+    │   └── helpers.py         # Utility functions
+    ├── server_health.py       # Health monitoring system
+    └── notion_cookbook.py     # Main application file</code></pre>
+    
+        <h2>Implementation Details</h2>
+    
+        <h3>Data Models</h3>
+        <p>The application uses sophisticated data models to represent recipe information:</p>
+        <ul>
+            <li>Title and URL</li>
+            <li>Ingredients (with relations to ingredient database)</li>
+            <li>Course type and servings</li>
+            <li>Nutritional information</li>
+            <li>Preparation, cooking, and total time</li>
+            <li>Cuisine classification</li>
+            <li>Tags (dietary restrictions, health markers)</li>
+        </ul>
+    
+        <h3>API Endpoints</h3>
+        <p>The service exposes several REST endpoints:</p>
+        <ul>
+            <li><strong>Recipe Endpoints:</strong>
+                <ul>
+                    <li><code>GET /recipe/</code>: Check recipe API status</li>
+                    <li><code>GET /recipe/analyze</code>: Analyze a recipe from a URL</li>
+                    <li><code>GET /recipe/create</code>: Create a recipe page in Notion</li>
+                </ul>
+            </li>
+            <li><strong>Ingredient Endpoints:</strong>
+                <ul>
+                    <li><code>GET /ingredient/status</code>: Check ingredient API status</li>
+                    <li><code>GET /ingredient/create</code>: Create a new ingredient</li>
+                    <li><code>GET /ingredient/&lt;name&gt;</code>: Search for an ingredient</li>
+                </ul>
+            </li>
+            <li><strong>Cuisine Endpoints:</strong>
+                <ul>
+                    <li><code>GET /cuisine/classify</code>: Classify cuisine based on ingredients</li>
+                    <li><code>GET /cuisine/&lt;name&gt;</code>: Search for a cuisine</li>
+                    <li><code>GET /cuisine/create</code>: Create a new cuisine entry</li>
+                </ul>
+            </li>
+        </ul>
+    
+        <h3>Security Features</h3>
+        <p>The application implements several security measures:</p>
+        <ul>
+            <li>Environment variable based configuration</li>
+            <li>Bearer token authentication for Notion API</li>
+            <li>API key authentication for Spoonacular</li>
+            <li>Error message sanitization</li>
+        </ul>
+    
+        <h2>Error Handling</h2>
+        <p>
+            The application implements comprehensive error handling to ensure reliability:
+        </p>
+        <ul>
+            <li>Input validation using Marshmallow schemas</li>
+            <li>Detailed error responses with stack traces in development</li>
+            <li>HTTP status code mapping</li>
+            <li>External service error handling</li>
+        </ul>
+    
+        <h2>Impact</h2>
+        <p>
+            The Cookbook Bot significantly improves recipe management workflow by:
+        </p>
+        <ul>
+            <li>Automating recipe data extraction and organization</li>
+            <li>Providing consistent structure across recipe entries</li>
+            <li>Enabling intelligent categorization of ingredients and cuisines</li>
+            <li>Reducing manual data entry time</li>
+            <li>Facilitating efficient recipe search and retrieval</li>
+        </ul>
+
+    </article>
+
+    <a href="https://github.com/mihirmodak/the-notion-cookbook-bot" style="color: inherit; text-decoration: none;" target="_self">
+        <h2 class="full-report-link">Details and Code</h2>
+    </a>
+    
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div style="margin: 20px 0px;"></div> <!-- A spacer, since <br> doesn't work apparently -->
+        <hr>
+
+        <div class="footer links">
+            <a href="https://mihirmodak.github.io" class="button round" target="_self">
+                <picture>
+                    <source srcset="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/home-darkmode.svg" media="(prefers-color-scheme: dark)" class="logo">
+                    <img src="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/home-lightmode.svg" class="logo">
+                </picture>
+            </a>
+
+            <a href="https://github.com/mihirmodak" class="button round" target="_blank">
+                <picture>
+                    <source srcset="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/github-mark-darkmode.svg" media="(prefers-color-scheme: dark)" class="logo">
+                    <img src="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/github-mark-lightmode.svg" class="logo" />
+                </picture>
+            </a>
+
+            <a href="https://www.linkedin.com/in/mihir-modak/" class="button round" target="_blank">
+                <picture>
+                    <source srcset="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/linkedin-darkmode.svg" media="(prefers-color-scheme: dark)" class="logo">
+                    <img src="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/linkedin-lightmode.svg" class="logo">
+                </picture>
+            </a>
+
+            <a href="https://mihirmodak.s3.us-east-1.amazonaws.com/Mihir+Modak+Resume.pdf" class="button round" target="_blank">
+                <picture>
+                    <source srcset="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/resume-darkmode.svg" media="(prefers-color-scheme: dark)" class="logo">
+                    <img src="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/resume-lightmode.svg" class="logo">
+                </picture>
+            </a>
+
+            <a href="mailto:mihir.modak@outlook.com" class="button round" target="_blank">
+                <picture>
+                    <source srcset="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/email-darkmode.svg" media="(prefers-color-scheme: dark)" class="logo">
+                    <img src="https://mihirmodak.s3.us-east-1.amazonaws.com/portfolio-images/email-lightmode.svg" class="logo">
+                </picture>
+            </a>
+        </div>
+    </footer>
+
+</body>
+
 </html>
